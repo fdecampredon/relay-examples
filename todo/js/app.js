@@ -15,10 +15,12 @@ import 'todomvc-common';
 import React from 'react';
 import ReactDOM from 'react-dom';
 
-import {QueryRenderer, graphql} from 'react-relay';
+import { graphql} from 'react-relay';
 import {Environment, Network, RecordSource, Store} from 'relay-runtime';
 
 import TodoApp from './components/TodoApp';
+import RelayProvider from './hooks/RelayProvider';
+import useQuery from './hooks/useQuery';
 
 function fetchQuery(operation, variables) {
   return fetch('/graphql', {
@@ -40,24 +42,26 @@ const modernEnvironment = new Environment({
   store: new Store(new RecordSource()),
 });
 
+const query = graphql `
+  query appQuery {
+    viewer {
+      ...TodoApp_viewer
+    }
+  }
+`
+
+const App = () => {
+  const [data] = useQuery(query, {});
+  if (data) {
+    return <TodoApp viewer={data.viewer} />;
+  } else {
+    return <div>Loading</div>;
+  }
+}
+
 ReactDOM.render(
-  <QueryRenderer
-    environment={modernEnvironment}
-    query={graphql`
-      query appQuery {
-        viewer {
-          ...TodoApp_viewer
-        }
-      }
-    `}
-    variables={{}}
-    render={({error, props}) => {
-      if (props) {
-        return <TodoApp viewer={props.viewer} />;
-      } else {
-        return <div>Loading</div>;
-      }
-    }}
-  />,
+  <RelayProvider environment={modernEnvironment}>
+    <App />
+  </RelayProvider>,
   document.getElementById('root'),
 );

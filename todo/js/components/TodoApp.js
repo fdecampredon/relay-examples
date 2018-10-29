@@ -16,60 +16,67 @@ import TodoListFooter from './TodoListFooter';
 import TodoTextInput from './TodoTextInput';
 
 import React from 'react';
-import {createFragmentContainer, graphql} from 'react-relay';
+import { graphql } from 'react-relay';
+import useResolveFragments from '../hooks/useResolveFragments';
 
-class TodoApp extends React.Component {
-  _handleTextInputSave = text => {
+
+
+const TodoApp = (props) => {
+  const { viewer, relay: { environment } } = useResolveFragments(
+    props, 
+    fragments
+  );
+
+  const _handleTextInputSave = text => {
     AddTodoMutation.commit(
-      this.props.relay.environment,
+      environment,
       text,
-      this.props.viewer,
+      viewer,
     );
   };
-  render() {
-    const hasTodos = this.props.viewer.totalCount > 0;
-    return (
-      <div>
-        <section className="todoapp">
-          <header className="header">
-            <h1>todos</h1>
-            <TodoTextInput
-              autoFocus={true}
-              className="new-todo"
-              onSave={this._handleTextInputSave}
-              placeholder="What needs to be done?"
-            />
-          </header>
-          <TodoList viewer={this.props.viewer} />
-          {hasTodos && (
-            <TodoListFooter
-              todos={this.props.viewer.todos}
-              viewer={this.props.viewer}
-            />
-          )}
-        </section>
-        <footer className="info">
-          <p>Double-click to edit a todo</p>
-          <p>
-            Created by the{' '}
-            <a href="https://facebook.github.io/relay/">Relay team</a>
-          </p>
-          <p>
-            Part of <a href="http://todomvc.com">TodoMVC</a>
-          </p>
-        </footer>
-      </div>
-    );
-  }
+
+  const hasTodos = viewer.totalCount > 0;
+  return (
+    <div>
+      <section className="todoapp">
+        <header className="header">
+          <h1>todos</h1>
+          <TodoTextInput
+            autoFocus={true}
+            className="new-todo"
+            onSave={_handleTextInputSave}
+            placeholder="What needs to be done?"
+          />
+        </header>
+        <TodoList viewer={viewer} />
+        {hasTodos && (
+          <TodoListFooter
+            todos={viewer.todos}
+            viewer={viewer}
+          />
+        )}
+      </section>
+      <footer className="info">
+        <p>Double-click to edit a todo</p>
+        <p>
+          Created by the{' '}
+          <a href="https://facebook.github.io/relay/">Relay team</a>
+        </p>
+        <p>
+          Part of <a href="http://todomvc.com">TodoMVC</a>
+        </p>
+      </footer>
+    </div>
+  );
 }
 
-export default createFragmentContainer(TodoApp, {
-  viewer: graphql`
-    fragment TodoApp_viewer on User {
-      id
-      totalCount
-      ...TodoListFooter_viewer
-      ...TodoList_viewer
-    }
-  `,
-});
+const fragments = graphql`
+  fragment TodoApp_viewer on User {
+    id
+    totalCount
+    ...TodoListFooter_viewer
+    ...TodoList_viewer
+  }
+`
+
+export default TodoApp;
